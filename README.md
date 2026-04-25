@@ -1,3 +1,5 @@
+Check live version at www.fiumbo.app/gambling
+
 ## Developing
 
 Install dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
