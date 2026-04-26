@@ -1,5 +1,5 @@
 <script lang="ts">
-	const { title = 'New Grid', userList = [] } = $props();
+	const { title = 'New Grid', userList = [], onClickUser } = $props();
 </script>
 
 <div class="container">
@@ -31,7 +31,9 @@
 						>
 							{user.ranking}</td
 						>
-						<td style="max-width: 20%; min-width: 20%">{user.username}</td>
+						<td style="max-width: 20%; min-width: 20%" onclick={() => onClickUser(user.username)}
+							>{user.username}</td
+						>
 						<td class="text-right" style="width: 4vw;"
 							>{user.totalGoldWon}
 							<img alt="Gold Coin" src="https://www.fiumbo.app/gold.png" width="16px" /></td

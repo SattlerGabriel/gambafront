@@ -4,6 +4,7 @@
 	import Grid from '../lib/components/grid.svelte';
 	import type { Payment } from '$lib/models/payment';
 	import PaymentRow from '$lib/components/paymentRow.svelte';
+	import UserInfo from '$lib/components/userInfo.svelte';
 	let loading = $state(false);
 	let userList: User[] = $state([]);
 	let topLosers: User[] = $state([]);
@@ -29,6 +30,12 @@
 
 		loading = false;
 	});
+
+	const showUserInfo = (username: string) => {
+		modal.Show(username);
+	};
+
+	let modal: UserInfo;
 </script>
 
 <div id="body">
@@ -55,19 +62,20 @@
 			</div>
 			<div class="duo-col">
 				<div class="losers">
-					<Grid title="Top 5 Losers" userList={topLosers} />
+					<Grid title="Top 5 Losers" userList={topLosers} onClickUser={showUserInfo} />
 				</div>
 				<div class="winners">
-					<Grid title="Top 5 Winners" userList={topWinners} />
+					<Grid title="Top 5 Winners" userList={topWinners} onClickUser={showUserInfo} />
 				</div>
 			</div>
 			<div class="tall-col">
 				<div class="allUsers">
-					<Grid title="All Gamblers" {userList} />
+					<Grid title="All Gamblers" {userList} onClickUser={showUserInfo} />
 				</div>
 			</div>
 		</div>
 	{/if}
+	<UserInfo bind:this={modal} />
 	<footer>Brought to you by a cunt named Boombah!</footer>
 </div>
 
