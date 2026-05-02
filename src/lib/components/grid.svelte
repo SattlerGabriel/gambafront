@@ -17,19 +17,19 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each userList as user}
+				{#each userList as user, i}
 					<tr>
 						<td
 							class="text-right"
-							class:top1={user.ranking == 1}
-							class:top2={user.ranking == 2}
-							class:top3={user.ranking == 3}
-							class:top4={user.ranking == 4}
-							class:top5={user.ranking == 5}
-							class:others={user.ranking > 5}
+							class:top1={i + 1 == 1}
+							class:top2={i + 1 == 2}
+							class:top3={i + 1 == 3}
+							class:top4={i + 1 == 4}
+							class:top5={i + 1 == 5}
+							class:others={i + 1 > 5}
 							style="width: 0px;"
 						>
-							{user.ranking}</td
+							{i + 1}</td
 						>
 						<td style="max-width: 20%; min-width: 20%" onclick={() => onClickUser(user.username)}
 							>{user.username}</td

@@ -1,8 +1,11 @@
+import type { User } from './user';
+
 export type Payment = {
-    id: string;
-    payerName: string;
-    paidName: string;
-    amount: number;
-    roundId: string;
-    timestamp: Date;
-}
+	id: string;
+	amount: number;
+	sender: User;
+	receiver: User;
+	timestamp: Date;
+	createdAt: Date;
+	updatedAt: Date;
+};

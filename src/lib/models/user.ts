@@ -4,5 +4,4 @@ export type User = {
 	totalGoldWon: number;
 	totalWon: number;
 	totalLost: number;
-	ranking: number | null;
 };

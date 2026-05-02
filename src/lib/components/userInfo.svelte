@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { PUBLIC_API_URL } from '$env/static/public';
+
 	let visible = $state(false);
 	let loading = $state(true);
 	let user = $state({
@@ -13,7 +15,7 @@
 		loading = true;
 		visible = true;
 
-		const r = await fetch('https://api.fiumbo.app/user/' + username);
+		const r = await fetch(PUBLIC_API_URL + 'user/' + username);
 		user = await r.json();
 		console.log(user);
 
@@ -37,11 +39,13 @@
 					<h1>{user.username} Stats</h1>
 				</div>
 				<div class="user-stats">
-					<p>Total gold earned: {user.totalGold}<img
+					<p>
+						Total gold earned: {user.totalGold}<img
 							alt="Gold Coin"
 							src="https://www.fiumbo.app/gold.png"
 							width="16px"
-						/></p>
+						/>
+					</p>
 					<p>Total rounds played: {user.totalRoundsPlayed}</p>
 					<p>
 						Got paid the most from: {user.topPayer.name} ( {user.topPayer.amount}<img

@@ -1,91 +1,75 @@
 <script lang="ts">
-	import type { User } from '$lib/models/user';
+	import { globalState } from './page.svelte.ts';
+	import GuildView from '$lib/components/guildView.svelte';
+	import { getDiscordAuthUrl, type DiscordUser } from '$lib/discord';
 	import { onMount } from 'svelte';
-	import Grid from '../lib/components/grid.svelte';
-	import type { Payment } from '$lib/models/payment';
-	import PaymentRow from '$lib/components/paymentRow.svelte';
-	import UserInfo from '$lib/components/userInfo.svelte';
-	let loading = $state(false);
-	let userList: User[] = $state([]);
-	let topLosers: User[] = $state([]);
-	let topWinners: User[] = $state([]);
-	let payments: Payment[] = $state([]);
+	import { PUBLIC_API_URL } from '$env/static/public';
 
-	onMount(async () => {
-		loading = true;
-		const res = await fetch('https://api.fiumbo.app/globalStats');
-		const body = (await res.json()) as User[];
-		userList = body.sort((a, b) => b.totalGoldWon - a.totalGoldWon);
-		for (let i = 0; i < userList.length; i++) {
-			userList[i].ranking = i + 1;
+	let guildList: any = $state([{ name: 'Life on Cooldown' }, { name: 'Phoenix Protocol' }]);
+	let input = $state('');
+
+	onMount(() => {
+		const data = localStorage.getItem('discord_user');
+		if (!!data) {
+			const user = JSON.parse(data) as DiscordUser | null;
+			globalState.login(user);
+			console.log(globalState.user);
+		} else {
+			globalState.login(null);
 		}
-		topWinners = [...userList].splice(0, 5);
-		topLosers = [...userList].sort((a, b) => a.totalGoldWon - b.totalGoldWon).splice(0, 5);
-
-		const paymentRes = await fetch('https://api.fiumbo.app/payments/latest');
-		payments = (await paymentRes.json()) as Payment[];
-		if (payments.length > 21) {
-			payments.splice(0, 10);
-		}
-
-		loading = false;
 	});
 
-	const showUserInfo = (username: string) => {
-		modal.Show(username);
-	};
+	const searchGuilds = async () => {
+		const res = await fetch(PUBLIC_API_URL + 'guilds/all/' + input);
 
-	let modal: UserInfo;
+		guildList = await res.json();
+		globalState.selectGuild(null);
+	};
 </script>
 
-<div id="body">
-	<div id="title">
-		<h1>Gamblelogs</h1>
-	</div>
-	{#if loading}
-		<p>Loading Data</p>
-	{:else}
-		<div class="flex">
-			<div class="tall-col">
-				<div class="payments">
-					<h1>Latest payments</h1>
-					{#each payments as payment, i}
-						<PaymentRow
-							className="paymentRow"
-							payerName={payment.payerName}
-							paidName={payment.paidName}
-							amount={payment.amount}
-							index={i + 1}
-						/>
-					{/each}
-				</div>
-			</div>
-			<div class="duo-col">
-				<div class="losers">
-					<Grid title="Top 5 Losers" userList={topLosers} onClickUser={showUserInfo} />
-				</div>
-				<div class="winners">
-					<Grid title="Top 5 Winners" userList={topWinners} onClickUser={showUserInfo} />
-				</div>
-			</div>
-			<div class="tall-col">
-				<div class="allUsers">
-					<Grid title="All Gamblers" {userList} onClickUser={showUserInfo} />
-				</div>
-			</div>
+{#if globalState.guild != null}
+	<GuildView guildName={globalState.guild.name} />
+{:else if guildList.length <= 0}
+	<div class="nonguild">
+		<h1>Search for a guild or register one to see and upload CrossGambling logs!</h1>
+		<form class="search">
+			<h2>Search for a guild</h2>
+			<input
+				name="guildName"
+				bind:value={input}
+				placeholder="Search a guild name..."
+				type="text"
+				class="searchBar"
+			/>
+			<button type="submit" onclick={() => searchGuilds()}>Search!</button>
+		</form>
+		<div>
+			{#if !globalState.user}
+				<p>Log in to register a guild</p>
+			{:else}
+				<button>Register new guild</button>
+			{/if}
 		</div>
-	{/if}
-	<UserInfo bind:this={modal} />
-	<footer>Brought to you by a cunt named Boombah!</footer>
-</div>
+	</div>
+{:else}
+	<div class="guildList">
+		<h1>Guilds found:</h1>
+		{#each guildList as guild}
+			<button
+				onclick={() => {
+					guildList = [];
+					globalState.selectGuild(guild);
+				}}>{guild.name}</button
+			>
+		{/each}
+	</div>
+{/if}
 
-<style lang="scss">
-	h1 {
-		margin: 0;
-	}
-
+<style lang="less">
+	h1,
 	p {
 		margin: 0;
+		padding: 0;
 	}
 
 	#body {
@@ -96,56 +80,94 @@
 		overflow-y: auto;
 	}
 
-	#title {
+	nav {
+		position: relative;
 		width: 100%;
-		text-align: center;
-		font-size: 2vw;
-		height: 6vh;
-	}
-
-	.flex {
+		height: 5vh;
 		display: flex;
-		justify-content: space-evenly;
+		justify-content: space-between;
 		align-items: center;
-		flex-direction: row;
-		height: calc(100% - 10vh);
-		width: 100%;
+		border-bottom: 1px solid #444;
 	}
 
-	.left {
-		padding-top: 10vh;
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		justify-content: space-evenly;
-	}
+	.searchBar {
+		background: none;
+		border: 1px solid white;
+		margin: 1vh;
+		color: white;
+		padding: 1vh;
 
-	.right {
-		padding-top: 10vh;
-		height: 100%;
-		display: flex;
-		align-items: start;
-		flex-direction: column;
-	}
-
-	.payments {
-		width: 100%;
-		border: 1px #444 solid;
-		border-bottom: none;
-
-		& h1 {
+		&::placeholder {
+			color: #aaa;
 			text-align: center;
-			padding: 0.25vw 2vw;
-			background: #222;
-			border-bottom: 1px solid #444;
 		}
 	}
 
-	footer {
-		position: fixed;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		text-align: center;
+	.userInfo {
+		height: 100%;
+		display: flex;
+		align-items: center;
+	}
+
+	.avatar {
+		border-radius: 100%;
+		width: 4.5vh;
+	}
+
+	button {
+		background: none;
+		border: 1px solid white;
+		border-radius: 2vw;
+		width: 10vw;
+		height: 4vh;
+		color: white;
+		cursor: pointer;
+	}
+
+	.nonguild {
+		width: 100%;
+		height: calc(100% - 5.5vh);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.search {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		margin: 3vh 0;
+	}
+
+	.navForm {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.title {
+		font-size: 2rem;
+		position: absolute;
+		top: 0;
+		left: calc(50% - 2rem * 4.5);
+	}
+
+	.guildList {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		overflow-y: auto;
+		height: calc(100% - 5.5vh);
+
+		h1 {
+			margin-bottom: 2vh;
+		}
+
+		button {
+			margin: 1vh 0;
+		}
 	}
 </style>
